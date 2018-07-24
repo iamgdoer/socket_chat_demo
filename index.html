@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Websocket Chat</title>
+    <style>
+        .top{
+            padding: 10px 20px;
+            background-color: #555;
+            text-align: center;
+            color: #fff;
+        }
+        .loginInfo{
+            margin: 10px 0;
+        }
+        .message{
+            padding: 10px;
+            min-height: 400px;
+            border: 1px solid #555;
+        }
+        .content{
+            width: 100%;
+            min-height: 100px;
+            resize: none;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .loginText{
+            font-size: 12px;
+            color: red;
+        }
+        p{
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+        .art{
+            font-size: 12px;
+            color: #ccc;
+        }
+        .name{
+            font-weight: bold;
+            color: pink;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header class="top">Websocket Chat</header>
+        <div class="loginInfo">
+            <input class="user" type="text" placeholder="please tab your name" />
+            <button class="conn" type="button">connect</button>
+            <button class="cut" type="button">cut down</button>
+            <span class="loginText">welcome to Websocket Chat!</span>
+        </div>
+        <main class="message">
+        </main>
+        <div class="handler">
+            <textarea class="content"></textarea>
+            <button class="send" type="button">send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/socket.io/2.1.1/socket.io.js"></script>
+    <script>
+        $(function () {
+            let socket = null
+            $('.conn').attr('disabled', false)
+            $('.cut').attr('disabled', true)
+            
+            $('.conn').click(() => {
+                let user = $('.user').val()
+                if (!user) {
+                    $('.loginText').html('请输入昵称')
+                    return
+                }
+                $('.conn').attr('disabled', true)
+                $('.cut').attr('disabled', false)
+                socket = io('ws://localhost:3000/')
+
+                socket.emit('login', user)
+                socket.on('ownLogin', (text) => {
+                    $('.loginText').html(text)
+                })
+                socket.on('user come in', (str) => {
+                    $('.message').append('<p class="art">' + str + '</p>')
+                })
+
+                $('.send').click(() => {
+                    let mess = $('.content').val()
+                    if (!mess) {
+                        alert('内容不能为空')
+                        return
+                    }
+                    socket.emit('message', mess)
+                    $('.content').val('')
+                })
+
+                socket.on('message', (data) => {
+                    $('.message').append('<p><span class="name">' + data.user + '</span> says: ' + data.mess + '</p>')
+                })
+
+                socket.on('leave', (str) => {
+                    $('.message').append('<p class="art">' + str + '</p>')
+                })
+            })
+        })
+    </script>
+</body>
+</html>
